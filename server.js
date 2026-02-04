@@ -1,5 +1,9 @@
 const express = require('express');
+const path = require('path');
 const app = express();
+
+// Serve static files (logo, etc.)
+app.use(express.static(path.join(__dirname)));
 
 const CLICKUP_API_KEY = process.env.CLICKUP_API_KEY || 'pk_96281769_0QYS1QJP2XT4580M8N76661HH45DPZUP';
 
@@ -158,6 +162,9 @@ app.get('/', async (req, res) => {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Time in Status Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -175,11 +182,22 @@ app.get('/', async (req, res) => {
       max-width: 800px;
       margin: 0 auto;
     }
-    h1 {
-      text-align: center;
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
       margin-bottom: 30px;
+    }
+    .logo {
+      width: 50px;
+      height: 50px;
+    }
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 36px;
       color: #ffffff;
-      font-size: 24px;
+      letter-spacing: 2px;
     }
     .card {
       background: #111111;
@@ -200,17 +218,18 @@ app.get('/', async (req, res) => {
       color: #ffffff;
     }
     .status-badge {
-      background: #7b68ee;
-      color: #fff;
+      background: #ffffff;
+      color: #000000;
       padding: 4px 12px;
       border-radius: 20px;
       font-size: 12px;
       text-transform: uppercase;
+      font-weight: 600;
     }
     .average-time {
       font-size: 48px;
       font-weight: 700;
-      color: #7b68ee;
+      color: #ffffff;
       text-align: center;
       margin: 20px 0;
     }
@@ -244,7 +263,10 @@ app.get('/', async (req, res) => {
 </head>
 <body>
   <div class="container">
-    <h1>⏱️ Average Time in Status</h1>
+    <div class="header">
+      <img src="/logo.png" alt="West Coast Strength" class="logo">
+      <h1>AVERAGE TICKET TIME</h1>
+    </div>
     ${results.map(r => `
       <div class="card">
         <div class="card-header">
