@@ -11,12 +11,12 @@ const CLICKUP_API_KEY = process.env.CLICKUP_API_KEY || 'pk_96281769_0QYS1QJP2XT4
 const LISTS = [
   {
     id: '901112845228',
-    name: 'Inventory Addition',
+    name: 'Inventory Addition Tickets',
     statusToTrack: 'to do'
   },
   {
     id: '901112845576',
-    name: 'New Hire',
+    name: 'New Hire Tickets',
     statusToTrack: 'open'  // Changed from 'to do' to 'open' based on your ClickUp setup
   }
 ];
@@ -161,7 +161,8 @@ app.get('/', async (req, res) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Time in Status Dashboard</title>
+  <meta http-equiv="refresh" content="3600">
+  <title>Average Ticket Time</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
