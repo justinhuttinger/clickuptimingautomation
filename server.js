@@ -13,16 +13,14 @@ const LISTS = [
   {
     id: '901112845576',
     name: 'New Hire',
-    statusToTrack: 'to do'
+    statusToTrack: 'open'  // Changed from 'to do' to 'open' based on your ClickUp setup
   }
 ];
 
-// Helper to format milliseconds into readable time
-function formatTime(ms) {
-  if (!ms || ms === 0) return '0m';
+// Helper to format minutes into readable time
+function formatTime(minutes) {
+  if (!minutes || minutes === 0) return '0m';
   
-  const seconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
   
@@ -82,10 +80,7 @@ async function getTimeInStatus(taskId) {
     return null;
   }
   
-  const data = await response.json();
-  // DEBUG: Log the actual response structure
-  console.log(`Task ${taskId} time_in_status:`, JSON.stringify(data, null, 2));
-  return data;
+  return await response.json();
 }
 
 // Calculate average time in a specific status for a list
@@ -99,40 +94,17 @@ async function calculateAverageTimeInStatus(listConfig) {
   
   const timesInStatus = [];
   
-  // Only process first 3 tasks for debugging
-  const tasksToProcess = tasks.slice(0, 3);
-  console.log(`Processing ${tasksToProcess.length} tasks for debugging`);
-  
-  for (const task of tasksToProcess) {
-    console.log(`\nProcessing task: ${task.id} - "${task.name}"`);
+  for (const task of tasks) {
     const timeData = await getTimeInStatus(task.id);
     
-    if (timeData) {
-      console.log('Response keys:', Object.keys(timeData));
+    if (timeData && timeData.status_history) {
+      // status_history is an array, find the matching status (case insensitive)
+      const statusEntry = timeData.status_history.find(
+        s => s.status && s.status.toLowerCase() === statusToTrack.toLowerCase()
+      );
       
-      // Try different possible structures
-      if (timeData.status_history) {
-        console.log('Found status_history');
-        const statusEntry = Object.values(timeData.status_history).find(
-          s => s.status && s.status.toLowerCase() === statusToTrack.toLowerCase()
-        );
-        if (statusEntry) {
-          console.log('Found matching status:', statusEntry);
-          if (statusEntry.total_time && statusEntry.total_time.time) {
-            timesInStatus.push(parseInt(statusEntry.total_time.time));
-          }
-        }
-      } else if (timeData.current_status) {
-        console.log('Found current_status structure');
-        // Maybe it's a different structure
-      } else if (Array.isArray(timeData)) {
-        console.log('Response is an array');
-        const statusEntry = timeData.find(
-          s => s.status && s.status.toLowerCase() === statusToTrack.toLowerCase()
-        );
-        if (statusEntry) {
-          console.log('Found matching status in array:', statusEntry);
-        }
+      if (statusEntry && statusEntry.total_time && statusEntry.total_time.by_minute) {
+        timesInStatus.push(statusEntry.total_time.by_minute);
       }
     }
     
@@ -146,7 +118,7 @@ async function calculateAverageTimeInStatus(listConfig) {
       statusToTrack,
       taskCount: tasks.length,
       tasksWithData: 0,
-      averageMs: 0,
+      averageMinutes: 0,
       averageFormatted: 'No data',
       minFormatted: 'N/A',
       maxFormatted: 'N/A'
@@ -162,8 +134,8 @@ async function calculateAverageTimeInStatus(listConfig) {
     statusToTrack,
     taskCount: tasks.length,
     tasksWithData: timesInStatus.length,
-    averageMs: average,
-    averageFormatted: formatTime(average),
+    averageMinutes: average,
+    averageFormatted: formatTime(Math.round(average)),
     minFormatted: formatTime(min),
     maxFormatted: formatTime(max)
   };
