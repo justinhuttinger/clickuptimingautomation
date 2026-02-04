@@ -8,16 +8,19 @@ app.use(express.static(path.join(__dirname)));
 const CLICKUP_API_KEY = process.env.CLICKUP_API_KEY || 'pk_96281769_0QYS1QJP2XT4580M8N76661HH45DPZUP';
 
 // Configure your lists here
+// Set customFieldName to the field you want to display (we'll log available fields on first run)
 const LISTS = [
   {
     id: '901112845228',
-    name: 'Inventory Addition Tickets',
-    statusToTrack: 'to do'
+    name: 'Inventory Addition',
+    statusToTrack: 'to do',
+    customFieldName: 'item name'  // Change this after checking logs
   },
   {
     id: '901112845576',
-    name: 'New Hire Tickets',
-    statusToTrack: 'open'  // Changed from 'to do' to 'open' based on your ClickUp setup
+    name: 'New Hire',
+    statusToTrack: 'open',
+    customFieldName: 'first name'  // Change this after checking logs
   }
 ];
 
@@ -37,6 +40,12 @@ function formatTime(minutes) {
   } else {
     return `${minutes}m`;
   }
+}
+
+// Format milliseconds to readable time
+function formatMsToTime(ms) {
+  const minutes = Math.floor(ms / 60000);
+  return formatTime(minutes);
 }
 
 // Fetch all tasks from a list
@@ -61,12 +70,30 @@ async function getTasksFromList(listId) {
     const data = await response.json();
     tasks.push(...data.tasks);
     
-    // ClickUp returns max 100 tasks per page
     hasMore = data.tasks.length === 100;
     page++;
   }
   
   return tasks;
+}
+
+// Get custom fields for a list (for debugging)
+async function getListCustomFields(listId) {
+  const url = `https://api.clickup.com/api/v2/list/${listId}/field`;
+  
+  const response = await fetch(url, {
+    headers: {
+      'Authorization': CLICKUP_API_KEY
+    }
+  });
+  
+  if (!response.ok) {
+    console.error(`Failed to get custom fields: ${response.status}`);
+    return [];
+  }
+  
+  const data = await response.json();
+  return data.fields || [];
 }
 
 // Get time in status for a single task
@@ -80,29 +107,87 @@ async function getTimeInStatus(taskId) {
   });
   
   if (!response.ok) {
-    console.error(`Failed to get time in status for task ${taskId}: ${response.status}`);
     return null;
   }
   
   return await response.json();
 }
 
-// Calculate average time in a specific status for a list
-async function calculateAverageTimeInStatus(listConfig) {
-  const { id, name, statusToTrack } = listConfig;
+// Get custom field value from task
+function getCustomFieldValue(task, fieldName) {
+  if (!task.custom_fields) return null;
+  
+  const field = task.custom_fields.find(
+    f => f.name && f.name.toLowerCase() === fieldName.toLowerCase()
+  );
+  
+  if (!field) return null;
+  
+  // Handle different field types
+  if (field.value !== undefined && field.value !== null) {
+    if (typeof field.value === 'object') {
+      return field.value.name || field.value.email || JSON.stringify(field.value);
+    }
+    return field.value;
+  }
+  
+  if (field.type_config && field.type_config.options) {
+    const option = field.type_config.options.find(o => o.id === field.value);
+    if (option) return option.name;
+  }
+  
+  return null;
+}
+
+// Calculate stats for a list
+async function calculateListStats(listConfig) {
+  const { id, name, statusToTrack, customFieldName } = listConfig;
   
   console.log(`Processing list: ${name}`);
+  
+  // Log custom fields on first run to help identify field names
+  const customFields = await getListCustomFields(id);
+  console.log(`Custom fields for ${name}:`, customFields.map(f => f.name));
   
   const tasks = await getTasksFromList(id);
   console.log(`Found ${tasks.length} tasks in ${name}`);
   
+  const now = Date.now();
+  const fiveDaysAgo = now - (5 * 24 * 60 * 60 * 1000);
+  
+  const outstandingTasks = [];
+  const recentlyCompletedTasks = [];
   const timesInStatus = [];
   
   for (const task of tasks) {
+    const isClosed = task.status && task.status.type === 'closed';
+    const customFieldValue = getCustomFieldValue(task, customFieldName);
+    
+    if (!isClosed) {
+      // Outstanding task
+      const timeWaiting = now - parseInt(task.date_created);
+      outstandingTasks.push({
+        name: task.name,
+        customField: customFieldValue || 'N/A',
+        timeWaiting: formatMsToTime(timeWaiting),
+        timeWaitingMs: timeWaiting
+      });
+    } else {
+      // Check if completed in last 5 days
+      const dateCompleted = task.date_done ? parseInt(task.date_done) : parseInt(task.date_updated);
+      if (dateCompleted >= fiveDaysAgo) {
+        recentlyCompletedTasks.push({
+          name: task.name,
+          customField: customFieldValue || 'N/A',
+          completedDate: new Date(dateCompleted).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' })
+        });
+      }
+    }
+    
+    // Get time in status for average calculation
     const timeData = await getTimeInStatus(task.id);
     
     if (timeData && timeData.status_history) {
-      // status_history is an array, find the matching status (case insensitive)
       const statusEntry = timeData.status_history.find(
         s => s.status && s.status.toLowerCase() === statusToTrack.toLowerCase()
       );
@@ -112,46 +197,50 @@ async function calculateAverageTimeInStatus(listConfig) {
       }
     }
     
-    // Small delay to avoid rate limiting
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 50));
   }
   
-  if (timesInStatus.length === 0) {
-    return {
-      name,
-      statusToTrack,
-      taskCount: tasks.length,
-      tasksWithData: 0,
-      averageMinutes: 0,
-      averageFormatted: 'No data',
-      minFormatted: 'N/A',
-      maxFormatted: 'N/A'
-    };
-  }
+  // Sort outstanding by longest waiting first
+  outstandingTasks.sort((a, b) => b.timeWaitingMs - a.timeWaitingMs);
   
-  const average = timesInStatus.reduce((a, b) => a + b, 0) / timesInStatus.length;
-  const min = Math.min(...timesInStatus);
-  const max = Math.max(...timesInStatus);
+  // Sort recently completed by most recent first
+  recentlyCompletedTasks.sort((a, b) => new Date(b.completedDate) - new Date(a.completedDate));
+  
+  // Calculate average
+  let averageFormatted = 'No data';
+  let minFormatted = 'N/A';
+  let maxFormatted = 'N/A';
+  
+  if (timesInStatus.length > 0) {
+    const average = timesInStatus.reduce((a, b) => a + b, 0) / timesInStatus.length;
+    const min = Math.min(...timesInStatus);
+    const max = Math.max(...timesInStatus);
+    
+    averageFormatted = formatTime(Math.round(average));
+    minFormatted = formatTime(min);
+    maxFormatted = formatTime(max);
+  }
   
   return {
     name,
-    statusToTrack,
     taskCount: tasks.length,
     tasksWithData: timesInStatus.length,
-    averageMinutes: average,
-    averageFormatted: formatTime(Math.round(average)),
-    minFormatted: formatTime(min),
-    maxFormatted: formatTime(max)
+    averageFormatted,
+    minFormatted,
+    maxFormatted,
+    outstandingCount: outstandingTasks.length,
+    outstandingTasks,
+    recentlyCompletedTasks
   };
 }
 
-// Main endpoint - serves the embeddable HTML
+// Main endpoint
 app.get('/', async (req, res) => {
   try {
     const results = [];
     
     for (const listConfig of LISTS) {
-      const result = await calculateAverageTimeInStatus(listConfig);
+      const result = await calculateListStats(listConfig);
       results.push(result);
     }
     
@@ -180,7 +269,7 @@ app.get('/', async (req, res) => {
       min-height: 100vh;
     }
     .container {
-      max-width: 800px;
+      max-width: 900px;
       margin: 0 auto;
     }
     .header {
@@ -214,25 +303,29 @@ app.get('/', async (req, res) => {
       margin-bottom: 16px;
     }
     .list-name {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 600;
       color: #ffffff;
     }
-    .status-badge {
-      background: #ffffff;
-      color: #000000;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      text-transform: uppercase;
-      font-weight: 600;
+    .priority-stats {
+      display: flex;
+      gap: 40px;
+      justify-content: center;
+      margin: 20px 0;
     }
-    .average-time {
-      font-size: 48px;
+    .priority-stat {
+      text-align: center;
+    }
+    .priority-label {
+      font-size: 12px;
+      color: #aaaaaa;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .priority-value {
+      font-size: 42px;
       font-weight: 700;
       color: #ffffff;
-      text-align: center;
-      margin: 20px 0;
     }
     .stats-row {
       display: flex;
@@ -254,11 +347,87 @@ app.get('/', async (req, res) => {
       font-weight: 600;
       color: #ffffff;
     }
-    .refresh-note {
+    .dropdown-section {
+      margin-top: 20px;
+    }
+    .dropdown-toggle {
+      background: #222222;
+      border: 1px solid #444444;
+      color: #ffffff;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .dropdown-toggle:hover {
+      background: #333333;
+    }
+    .dropdown-content {
+      display: none;
+      background: #1a1a1a;
+      border: 1px solid #333333;
+      border-radius: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .dropdown-content.show {
+      display: block;
+    }
+    .dropdown-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid #222222;
+    }
+    .dropdown-item:last-child {
+      border-bottom: none;
+    }
+    .item-name {
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+    .item-details {
+      font-size: 12px;
+      color: #aaaaaa;
+    }
+    .item-time {
+      color: #ff6b6b;
+      font-weight: 500;
+    }
+    .item-completed {
+      color: #51cf66;
+    }
+    .refresh-section {
       text-align: center;
+      margin-top: 30px;
+    }
+    .refresh-btn {
+      background: #222222;
+      border: 1px solid #444444;
+      color: #ffffff;
+      padding: 10px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    .refresh-btn:hover {
+      background: #333333;
+    }
+    .refresh-note {
       color: #888888;
       font-size: 12px;
-      margin-top: 20px;
+    }
+    .arrow {
+      transition: transform 0.2s;
+    }
+    .arrow.open {
+      transform: rotate(180deg);
     }
   </style>
 </head>
@@ -272,9 +441,17 @@ app.get('/', async (req, res) => {
       <div class="card">
         <div class="card-header">
           <span class="list-name">${r.name}</span>
-          <span class="status-badge">${r.statusToTrack}</span>
         </div>
-        <div class="average-time">${r.averageFormatted}</div>
+        <div class="priority-stats">
+          <div class="priority-stat">
+            <div class="priority-label">Avg Time</div>
+            <div class="priority-value">${r.averageFormatted}</div>
+          </div>
+          <div class="priority-stat">
+            <div class="priority-label">Outstanding</div>
+            <div class="priority-value">${r.outstandingCount}</div>
+          </div>
+        </div>
         <div class="stats-row">
           <div class="stat">
             <div class="stat-label">Tasks Analyzed</div>
@@ -289,10 +466,59 @@ app.get('/', async (req, res) => {
             <div class="stat-value">${r.maxFormatted}</div>
           </div>
         </div>
+        
+        <div class="dropdown-section">
+          <button class="dropdown-toggle" onclick="toggleDropdown('outstanding-${r.name.replace(/\s/g, '')}')">
+            <span>Outstanding Tickets (${r.outstandingTasks.length})</span>
+            <span class="arrow" id="arrow-outstanding-${r.name.replace(/\s/g, '')}">▼</span>
+          </button>
+          <div class="dropdown-content" id="outstanding-${r.name.replace(/\s/g, '')}">
+            ${r.outstandingTasks.length === 0 ? '<div class="dropdown-item">No outstanding tickets</div>' : 
+              r.outstandingTasks.map(t => `
+                <div class="dropdown-item">
+                  <div class="item-name">${t.name}</div>
+                  <div class="item-details">
+                    ${t.customField !== 'N/A' ? `<span>${t.customField}</span> • ` : ''}
+                    <span class="item-time">Waiting: ${t.timeWaiting}</span>
+                  </div>
+                </div>
+              `).join('')}
+          </div>
+          
+          <button class="dropdown-toggle" onclick="toggleDropdown('completed-${r.name.replace(/\s/g, '')}')">
+            <span>Recently Completed (${r.recentlyCompletedTasks.length})</span>
+            <span class="arrow" id="arrow-completed-${r.name.replace(/\s/g, '')}">▼</span>
+          </button>
+          <div class="dropdown-content" id="completed-${r.name.replace(/\s/g, '')}">
+            ${r.recentlyCompletedTasks.length === 0 ? '<div class="dropdown-item">No tickets completed in last 5 days</div>' : 
+              r.recentlyCompletedTasks.map(t => `
+                <div class="dropdown-item">
+                  <div class="item-name">${t.name}</div>
+                  <div class="item-details">
+                    ${t.customField !== 'N/A' ? `<span>${t.customField}</span> • ` : ''}
+                    <span class="item-completed">Completed: ${t.completedDate}</span>
+                  </div>
+                </div>
+              `).join('')}
+          </div>
+        </div>
       </div>
     `).join('')}
-    <p class="refresh-note">Last updated: ${new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles', dateStyle: 'short', timeStyle: 'short' })} PST</p>
+    
+    <div class="refresh-section">
+      <button class="refresh-btn" onclick="location.reload()">↻ Refresh Now</button>
+      <p class="refresh-note">Last updated: ${new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles', dateStyle: 'short', timeStyle: 'short' })} PST • Auto-refreshes every hour</p>
+    </div>
   </div>
+  
+  <script>
+    function toggleDropdown(id) {
+      const content = document.getElementById(id);
+      const arrow = document.getElementById('arrow-' + id);
+      content.classList.toggle('show');
+      arrow.classList.toggle('open');
+    }
+  </script>
 </body>
 </html>
     `;
@@ -304,13 +530,13 @@ app.get('/', async (req, res) => {
   }
 });
 
-// JSON endpoint for programmatic access
+// JSON endpoint
 app.get('/api/stats', async (req, res) => {
   try {
     const results = [];
     
     for (const listConfig of LISTS) {
-      const result = await calculateAverageTimeInStatus(listConfig);
+      const result = await calculateListStats(listConfig);
       results.push(result);
     }
     
