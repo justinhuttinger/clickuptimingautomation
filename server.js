@@ -7,6 +7,12 @@ app.use(express.static(path.join(__dirname)));
 
 const CLICKUP_API_KEY = process.env.CLICKUP_API_KEY || 'pk_96281769_0QYS1QJP2XT4580M8N76661HH45DPZUP';
 
+// Cache settings
+let cachedResults = null;
+let lastFetchTime = null;
+const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
+let isFetching = false;
+
 // Configure your lists here
 // Set customFieldName to the field you want to display (we'll log available fields on first run)
 const LISTS = [
@@ -14,13 +20,31 @@ const LISTS = [
     id: '901112845228',
     name: 'Inventory Addition',
     statusToTrack: 'to do',
-    customFieldName: 'item name'  // Change this after checking logs
+    customFieldName: 'item name'
   },
   {
     id: '901112845576',
     name: 'New Hire',
     statusToTrack: 'open',
-    customFieldName: 'first name'  // Change this after checking logs
+    customFieldName: 'first name'
+  },
+  {
+    id: '8chqnub-2591',
+    name: 'Staff Updates',
+    statusToTrack: 'to do',
+    customFieldName: 'first name'
+  },
+  {
+    id: '8chqnub-2551',
+    name: 'Offboarding',
+    statusToTrack: 'to do',
+    customFieldName: 'first name'
+  },
+  {
+    id: '8chqnub-2751',
+    name: 'New Help Center Docs',
+    statusToTrack: 'to do',
+    customFieldName: null  // Will just show task name
   }
 ];
 
@@ -115,7 +139,7 @@ async function getTimeInStatus(taskId) {
 
 // Get custom field value from task
 function getCustomFieldValue(task, fieldName) {
-  if (!task.custom_fields) return null;
+  if (!fieldName || !task.custom_fields) return null;
   
   const field = task.custom_fields.find(
     f => f.name && f.name.toLowerCase() === fieldName.toLowerCase()
@@ -234,15 +258,54 @@ async function calculateListStats(listConfig) {
   };
 }
 
+// Fetch all stats (used for caching)
+async function fetchAllStats() {
+  const results = [];
+  for (const listConfig of LISTS) {
+    const result = await calculateListStats(listConfig);
+    results.push(result);
+  }
+  return results;
+}
+
+// Get stats with caching
+async function getStatsWithCache() {
+  const now = Date.now();
+  
+  // Return cached results if still valid
+  if (cachedResults && lastFetchTime && (now - lastFetchTime < CACHE_DURATION)) {
+    console.log('Returning cached results');
+    return { results: cachedResults, fromCache: true, lastUpdated: lastFetchTime };
+  }
+  
+  // If already fetching, return stale cache or wait
+  if (isFetching) {
+    if (cachedResults) {
+      console.log('Fetch in progress, returning stale cache');
+      return { results: cachedResults, fromCache: true, lastUpdated: lastFetchTime };
+    }
+  }
+  
+  // Fetch fresh data
+  isFetching = true;
+  console.log('Fetching fresh data...');
+  
+  try {
+    const results = await fetchAllStats();
+    cachedResults = results;
+    lastFetchTime = Date.now();
+    console.log('Cache updated');
+    return { results, fromCache: false, lastUpdated: lastFetchTime };
+  } finally {
+    isFetching = false;
+  }
+}
+
 // Main endpoint
 app.get('/', async (req, res) => {
   try {
-    const results = [];
-    
-    for (const listConfig of LISTS) {
-      const result = await calculateListStats(listConfig);
-      results.push(result);
-    }
+    const { results, fromCache, lastUpdated } = await getStatsWithCache();
+    const lastUpdatedDate = new Date(lastUpdated);
     
     const html = `
 <!DOCTYPE html>
@@ -507,7 +570,8 @@ app.get('/', async (req, res) => {
     
     <div class="refresh-section">
       <button class="refresh-btn" onclick="location.reload()">↻ Refresh Now</button>
-      <p class="refresh-note">Last updated: ${new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles', dateStyle: 'short', timeStyle: 'short' })} PST • Auto-refreshes every hour</p>
+      <button class="refresh-btn" onclick="location.href='/refresh'" style="margin-left: 10px;">⟳ Force Data Refresh</button>
+      <p class="refresh-note">Data updated: ${lastUpdatedDate.toLocaleString('en-US', { timeZone: 'America/Los_Angeles', dateStyle: 'short', timeStyle: 'short' })} PST ${fromCache ? '(cached)' : '(fresh)'} • Auto-refreshes every hour</p>
     </div>
   </div>
   
@@ -530,18 +594,20 @@ app.get('/', async (req, res) => {
   }
 });
 
+// Force refresh endpoint - clears cache and redirects
+app.get('/refresh', async (req, res) => {
+  cachedResults = null;
+  lastFetchTime = null;
+  res.redirect('/');
+});
+
 // JSON endpoint
 app.get('/api/stats', async (req, res) => {
   try {
-    const results = [];
-    
-    for (const listConfig of LISTS) {
-      const result = await calculateListStats(listConfig);
-      results.push(result);
-    }
+    const { results, lastUpdated } = await getStatsWithCache();
     
     res.json({
-      updated: new Date().toISOString(),
+      updated: new Date(lastUpdated).toISOString(),
       lists: results
     });
   } catch (error) {
