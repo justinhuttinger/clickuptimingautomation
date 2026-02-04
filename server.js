@@ -21,35 +21,40 @@ const LISTS = [
     name: 'Inventory Addition',
     statusToTrack: 'to do',
     customFieldName: 'Item Name',
-    formUrl: 'https://forms.clickup.com/9011189579/f/8chqnub-2111/9VUXKVKZ5ED01B1LGK'
+    formUrl: 'https://forms.clickup.com/9011189579/f/8chqnub-2111/9VUXKVKZ5ED01B1LGK',
+    description: 'Add new items to ABC catalog for POS'
   },
   {
     id: '901112845576',
     name: 'New Hire',
     statusToTrack: 'open',
     customFieldName: 'First Name',
-    formUrl: 'https://forms.clickup.com/9011189579/f/8chqnub-2151/CZ3QFG9AMCIB8KHJ74'
+    formUrl: 'https://forms.clickup.com/9011189579/f/8chqnub-2151/CZ3QFG9AMCIB8KHJ74',
+    description: 'Add New Hire to WCS Systems'
   },
   {
     id: '901112959393',
     name: 'Staff Updates',
     statusToTrack: 'to do',
     customFieldName: 'First Name',
-    formUrl: 'https://forms.clickup.com/9011189579/f/8chqnub-2611/FKIRJ3X6EVJM6BSA5Q'
+    formUrl: 'https://forms.clickup.com/9011189579/f/8chqnub-2611/FKIRJ3X6EVJM6BSA5Q',
+    description: 'Change or Adjust Current Staff Access/Systems'
   },
   {
     id: '901112959189',
     name: 'Offboarding',
     statusToTrack: 'to do',
     customFieldName: 'First Name',
-    formUrl: 'https://forms.clickup.com/9011189579/f/8chqnub-2571/R6WYGJ0XZMS7W76KHX'
+    formUrl: 'https://forms.clickup.com/9011189579/f/8chqnub-2571/R6WYGJ0XZMS7W76KHX',
+    description: 'Offboard Employee'
   },
   {
     id: '901113045232',
     name: 'New Help Center Docs',
     statusToTrack: 'to do',
     customFieldName: null,
-    formUrl: 'https://forms.clickup.com/9011189579/f/8chqnub-2791/LO3VQ5PP9HAYNNIRLV'
+    formUrl: 'https://forms.clickup.com/9011189579/f/8chqnub-2791/LO3VQ5PP9HAYNNIRLV',
+    description: 'Add New Training Material'
   }
 ];
 
@@ -66,8 +71,8 @@ const getStyles = () => `
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #000000;
-      color: #ffffff;
+      background: #ffffff;
+      color: #000000;
       padding: 20px;
       min-height: 100vh;
     }
@@ -89,23 +94,23 @@ const getStyles = () => `
     h1 {
       font-family: 'Bebas Neue', sans-serif;
       font-size: 36px;
-      color: #ffffff;
+      color: #000000;
       letter-spacing: 2px;
     }
     h2 {
       font-family: 'Bebas Neue', sans-serif;
       font-size: 28px;
-      color: #ffffff;
+      color: #000000;
       letter-spacing: 1px;
       text-align: center;
       margin-bottom: 30px;
     }
     .card {
-      background: #111111;
+      background: #f5f5f5;
       border-radius: 12px;
       padding: 24px;
       margin-bottom: 20px;
-      border: 1px solid #333333;
+      border: 1px solid #e0e0e0;
     }
     .card-header {
       display: flex;
@@ -116,12 +121,12 @@ const getStyles = () => `
     .list-name {
       font-size: 20px;
       font-weight: 600;
-      color: #ffffff;
+      color: #000000;
     }
     .btn {
-      background: #222222;
-      border: 1px solid #444444;
-      color: #ffffff;
+      background: #f5f5f5;
+      border: 1px solid #cccccc;
+      color: #000000;
       padding: 16px 32px;
       border-radius: 8px;
       cursor: pointer;
@@ -131,7 +136,7 @@ const getStyles = () => `
       transition: background 0.2s;
     }
     .btn:hover {
-      background: #333333;
+      background: #e0e0e0;
     }
     .btn-large {
       padding: 24px 48px;
@@ -153,9 +158,9 @@ const getStyles = () => `
       margin: 40px auto;
     }
     .choice-btn {
-      background: #111111;
-      border: 2px solid #333333;
-      color: #ffffff;
+      background: #f5f5f5;
+      border: 2px solid #e0e0e0;
+      color: #000000;
       padding: 40px 30px;
       border-radius: 12px;
       cursor: pointer;
@@ -164,8 +169,8 @@ const getStyles = () => `
       transition: all 0.2s;
     }
     .choice-btn:hover {
-      border-color: #ffffff;
-      background: #1a1a1a;
+      border-color: #000000;
+      background: #eeeeee;
     }
     .choice-icon {
       font-size: 48px;
@@ -178,18 +183,23 @@ const getStyles = () => `
     }
     .choice-desc {
       font-size: 14px;
-      color: #888888;
+      color: #666666;
       margin-top: 10px;
     }
-    .back-link {
+    .back-btn {
       display: inline-block;
-      color: #888888;
+      background: #f5f5f5;
+      border: 1px solid #cccccc;
+      color: #000000;
+      padding: 10px 20px;
+      border-radius: 8px;
       text-decoration: none;
       margin-bottom: 20px;
       font-size: 14px;
+      transition: background 0.2s;
     }
-    .back-link:hover {
-      color: #ffffff;
+    .back-btn:hover {
+      background: #e0e0e0;
     }
     .priority-stats {
       display: flex;
@@ -202,42 +212,42 @@ const getStyles = () => `
     }
     .priority-label {
       font-size: 12px;
-      color: #aaaaaa;
+      color: #666666;
       margin-bottom: 8px;
       text-transform: uppercase;
     }
     .priority-value {
       font-size: 42px;
       font-weight: 700;
-      color: #ffffff;
+      color: #000000;
     }
     .stats-row {
       display: flex;
       justify-content: space-around;
       margin-top: 20px;
       padding-top: 20px;
-      border-top: 1px solid #333333;
+      border-top: 1px solid #e0e0e0;
     }
     .stat {
       text-align: center;
     }
     .stat-label {
       font-size: 12px;
-      color: #aaaaaa;
+      color: #666666;
       margin-bottom: 4px;
     }
     .stat-value {
       font-size: 16px;
       font-weight: 600;
-      color: #ffffff;
+      color: #000000;
     }
     .dropdown-section {
       margin-top: 20px;
     }
     .dropdown-toggle {
-      background: #222222;
-      border: 1px solid #444444;
-      color: #ffffff;
+      background: #eeeeee;
+      border: 1px solid #cccccc;
+      color: #000000;
       padding: 10px 16px;
       border-radius: 8px;
       cursor: pointer;
@@ -250,12 +260,12 @@ const getStyles = () => `
       margin-bottom: 8px;
     }
     .dropdown-toggle:hover {
-      background: #333333;
+      background: #e0e0e0;
     }
     .dropdown-content {
       display: none;
-      background: #1a1a1a;
-      border: 1px solid #333333;
+      background: #fafafa;
+      border: 1px solid #e0e0e0;
       border-radius: 8px;
       max-height: 300px;
       overflow-y: auto;
@@ -265,35 +275,35 @@ const getStyles = () => `
     }
     .dropdown-item {
       padding: 12px 16px;
-      border-bottom: 1px solid #222222;
+      border-bottom: 1px solid #eeeeee;
     }
     .dropdown-item:last-child {
       border-bottom: none;
     }
     .item-name {
       font-weight: 600;
-      color: #ffffff;
+      color: #000000;
       margin-bottom: 4px;
     }
     .item-details {
       font-size: 12px;
-      color: #aaaaaa;
+      color: #666666;
     }
     .item-time {
-      color: #ff6b6b;
+      color: #dc3545;
       font-weight: 500;
     }
     .item-completed {
-      color: #51cf66;
+      color: #28a745;
     }
     .refresh-section {
       text-align: center;
       margin-top: 30px;
     }
     .refresh-btn {
-      background: #222222;
-      border: 1px solid #444444;
-      color: #ffffff;
+      background: #f5f5f5;
+      border: 1px solid #cccccc;
+      color: #000000;
       padding: 10px 24px;
       border-radius: 8px;
       cursor: pointer;
@@ -301,10 +311,10 @@ const getStyles = () => `
       margin-bottom: 10px;
     }
     .refresh-btn:hover {
-      background: #333333;
+      background: #e0e0e0;
     }
     .refresh-note {
-      color: #888888;
+      color: #666666;
       font-size: 12px;
     }
     .arrow {
@@ -314,20 +324,20 @@ const getStyles = () => `
       transform: rotate(180deg);
     }
     .form-card {
-      background: #111111;
-      border: 2px solid #333333;
+      background: #f5f5f5;
+      border: 2px solid #e0e0e0;
       border-radius: 12px;
       padding: 24px;
       text-align: center;
       cursor: pointer;
       transition: all 0.2s;
       text-decoration: none;
-      color: #ffffff;
+      color: #000000;
       display: block;
     }
     .form-card:hover {
-      border-color: #ffffff;
-      background: #1a1a1a;
+      border-color: #000000;
+      background: #eeeeee;
     }
     .form-card-title {
       font-family: 'Bebas Neue', sans-serif;
@@ -337,7 +347,7 @@ const getStyles = () => `
     }
     .form-card-desc {
       font-size: 13px;
-      color: #888888;
+      color: #666666;
     }
   </style>
 `;
@@ -645,7 +655,7 @@ app.get('/submit', (req, res) => {
 </head>
 <body>
   <div class="container">
-    <a href="/" class="back-link">← Back to Home</a>
+    <a href="/" class="back-btn">← Back to Home</a>
     
     <div class="header">
       <img src="/logo.png" alt="West Coast Strength" class="logo">
@@ -658,6 +668,7 @@ app.get('/submit', (req, res) => {
       ${LISTS.map(list => `
         <a href="${list.formUrl}" target="_blank" class="form-card">
           <div class="form-card-title">${list.name}</div>
+          <div class="form-card-desc">${list.description}</div>
         </a>
       `).join('')}
     </div>
@@ -693,8 +704,8 @@ app.get('/status', async (req, res) => {
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #000000;
-      color: #ffffff;
+      background: #ffffff;
+      color: #000000;
       padding: 20px;
       min-height: 100vh;
     }
@@ -716,15 +727,15 @@ app.get('/status', async (req, res) => {
     h1 {
       font-family: 'Bebas Neue', sans-serif;
       font-size: 36px;
-      color: #ffffff;
+      color: #000000;
       letter-spacing: 2px;
     }
     .card {
-      background: #111111;
+      background: #f5f5f5;
       border-radius: 12px;
       padding: 24px;
       margin-bottom: 20px;
-      border: 1px solid #333333;
+      border: 1px solid #e0e0e0;
     }
     .card-header {
       display: flex;
@@ -735,7 +746,7 @@ app.get('/status', async (req, res) => {
     .list-name {
       font-size: 20px;
       font-weight: 600;
-      color: #ffffff;
+      color: #000000;
     }
     .priority-stats {
       display: flex;
@@ -748,42 +759,42 @@ app.get('/status', async (req, res) => {
     }
     .priority-label {
       font-size: 12px;
-      color: #aaaaaa;
+      color: #666666;
       margin-bottom: 8px;
       text-transform: uppercase;
     }
     .priority-value {
       font-size: 42px;
       font-weight: 700;
-      color: #ffffff;
+      color: #000000;
     }
     .stats-row {
       display: flex;
       justify-content: space-around;
       margin-top: 20px;
       padding-top: 20px;
-      border-top: 1px solid #333333;
+      border-top: 1px solid #e0e0e0;
     }
     .stat {
       text-align: center;
     }
     .stat-label {
       font-size: 12px;
-      color: #aaaaaa;
+      color: #666666;
       margin-bottom: 4px;
     }
     .stat-value {
       font-size: 16px;
       font-weight: 600;
-      color: #ffffff;
+      color: #000000;
     }
     .dropdown-section {
       margin-top: 20px;
     }
     .dropdown-toggle {
-      background: #222222;
-      border: 1px solid #444444;
-      color: #ffffff;
+      background: #eeeeee;
+      border: 1px solid #cccccc;
+      color: #000000;
       padding: 10px 16px;
       border-radius: 8px;
       cursor: pointer;
@@ -796,12 +807,12 @@ app.get('/status', async (req, res) => {
       margin-bottom: 8px;
     }
     .dropdown-toggle:hover {
-      background: #333333;
+      background: #e0e0e0;
     }
     .dropdown-content {
       display: none;
-      background: #1a1a1a;
-      border: 1px solid #333333;
+      background: #fafafa;
+      border: 1px solid #e0e0e0;
       border-radius: 8px;
       max-height: 300px;
       overflow-y: auto;
@@ -811,35 +822,35 @@ app.get('/status', async (req, res) => {
     }
     .dropdown-item {
       padding: 12px 16px;
-      border-bottom: 1px solid #222222;
+      border-bottom: 1px solid #eeeeee;
     }
     .dropdown-item:last-child {
       border-bottom: none;
     }
     .item-name {
       font-weight: 600;
-      color: #ffffff;
+      color: #000000;
       margin-bottom: 4px;
     }
     .item-details {
       font-size: 12px;
-      color: #aaaaaa;
+      color: #666666;
     }
     .item-time {
-      color: #ff6b6b;
+      color: #dc3545;
       font-weight: 500;
     }
     .item-completed {
-      color: #51cf66;
+      color: #28a745;
     }
     .refresh-section {
       text-align: center;
       margin-top: 30px;
     }
     .refresh-btn {
-      background: #222222;
-      border: 1px solid #444444;
-      color: #ffffff;
+      background: #f5f5f5;
+      border: 1px solid #cccccc;
+      color: #000000;
       padding: 10px 24px;
       border-radius: 8px;
       cursor: pointer;
@@ -847,10 +858,10 @@ app.get('/status', async (req, res) => {
       margin-bottom: 10px;
     }
     .refresh-btn:hover {
-      background: #333333;
+      background: #e0e0e0;
     }
     .refresh-note {
-      color: #888888;
+      color: #666666;
       font-size: 12px;
     }
     .arrow {
@@ -859,21 +870,26 @@ app.get('/status', async (req, res) => {
     .arrow.open {
       transform: rotate(180deg);
     }
-    .back-link {
+    .back-btn {
       display: inline-block;
-      color: #888888;
+      background: #f5f5f5;
+      border: 1px solid #cccccc;
+      color: #000000;
+      padding: 10px 20px;
+      border-radius: 8px;
       text-decoration: none;
       margin-bottom: 20px;
       font-size: 14px;
+      transition: background 0.2s;
     }
-    .back-link:hover {
-      color: #ffffff;
+    .back-btn:hover {
+      background: #e0e0e0;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <a href="/" class="back-link">← Back to Home</a>
+    <a href="/" class="back-btn">← Back to Home</a>
     
     <div class="header">
       <img src="/logo.png" alt="West Coast Strength" class="logo">
