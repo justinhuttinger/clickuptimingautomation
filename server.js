@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 
-const CLICKUP_API_KEY = 'pk_96281769_0QYS1QJP2XT4580M8N76661HH45DPZUP';
+const CLICKUP_API_KEY = process.env.CLICKUP_API_KEY;
 
 // Configure your lists here
 const LISTS = [
