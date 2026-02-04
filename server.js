@@ -20,33 +20,327 @@ const LISTS = [
     id: '901112845228',
     name: 'Inventory Addition',
     statusToTrack: 'to do',
-    customFieldName: 'Item Name'
+    customFieldName: 'Item Name',
+    formUrl: 'https://forms.clickup.com/9011189579/f/8chqnub-2111/9VUXKVKZ5ED01B1LGK'
   },
   {
     id: '901112845576',
     name: 'New Hire',
     statusToTrack: 'open',
-    customFieldName: 'First Name'
+    customFieldName: 'First Name',
+    formUrl: 'https://forms.clickup.com/9011189579/f/8chqnub-2151/CZ3QFG9AMCIB8KHJ74'
   },
   {
     id: '901112959393',
     name: 'Staff Updates',
     statusToTrack: 'to do',
-    customFieldName: 'First Name'
+    customFieldName: 'First Name',
+    formUrl: 'https://forms.clickup.com/9011189579/f/8chqnub-2611/FKIRJ3X6EVJM6BSA5Q'
   },
   {
     id: '901112959189',
     name: 'Offboarding',
     statusToTrack: 'to do',
-    customFieldName: 'First Name'
+    customFieldName: 'First Name',
+    formUrl: 'https://forms.clickup.com/9011189579/f/8chqnub-2571/R6WYGJ0XZMS7W76KHX'
   },
   {
     id: '901113045232',
     name: 'New Help Center Docs',
     statusToTrack: 'to do',
-    customFieldName: null
+    customFieldName: null,
+    formUrl: 'https://forms.clickup.com/9011189579/f/8chqnub-2791/LO3VQ5PP9HAYNNIRLV'
   }
 ];
+
+// Shared styles
+const getStyles = () => `
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #000000;
+      color: #ffffff;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    .logo {
+      width: 50px;
+      height: 50px;
+    }
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 36px;
+      color: #ffffff;
+      letter-spacing: 2px;
+    }
+    h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      color: #ffffff;
+      letter-spacing: 1px;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .card {
+      background: #111111;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      border: 1px solid #333333;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .list-name {
+      font-size: 20px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+    .btn {
+      background: #222222;
+      border: 1px solid #444444;
+      color: #ffffff;
+      padding: 16px 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      text-decoration: none;
+      display: inline-block;
+      transition: background 0.2s;
+    }
+    .btn:hover {
+      background: #333333;
+    }
+    .btn-large {
+      padding: 24px 48px;
+      font-size: 18px;
+      font-family: 'Bebas Neue', sans-serif;
+      letter-spacing: 1px;
+    }
+    .btn-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .choice-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      max-width: 600px;
+      margin: 40px auto;
+    }
+    .choice-btn {
+      background: #111111;
+      border: 2px solid #333333;
+      color: #ffffff;
+      padding: 40px 30px;
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .choice-btn:hover {
+      border-color: #ffffff;
+      background: #1a1a1a;
+    }
+    .choice-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+    .choice-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 24px;
+      letter-spacing: 1px;
+    }
+    .choice-desc {
+      font-size: 14px;
+      color: #888888;
+      margin-top: 10px;
+    }
+    .back-link {
+      display: inline-block;
+      color: #888888;
+      text-decoration: none;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    .back-link:hover {
+      color: #ffffff;
+    }
+    .priority-stats {
+      display: flex;
+      gap: 40px;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    .priority-stat {
+      text-align: center;
+    }
+    .priority-label {
+      font-size: 12px;
+      color: #aaaaaa;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .priority-value {
+      font-size: 42px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+    .stats-row {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #333333;
+    }
+    .stat {
+      text-align: center;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #aaaaaa;
+      margin-bottom: 4px;
+    }
+    .stat-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+    .dropdown-section {
+      margin-top: 20px;
+    }
+    .dropdown-toggle {
+      background: #222222;
+      border: 1px solid #444444;
+      color: #ffffff;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .dropdown-toggle:hover {
+      background: #333333;
+    }
+    .dropdown-content {
+      display: none;
+      background: #1a1a1a;
+      border: 1px solid #333333;
+      border-radius: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .dropdown-content.show {
+      display: block;
+    }
+    .dropdown-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid #222222;
+    }
+    .dropdown-item:last-child {
+      border-bottom: none;
+    }
+    .item-name {
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+    .item-details {
+      font-size: 12px;
+      color: #aaaaaa;
+    }
+    .item-time {
+      color: #ff6b6b;
+      font-weight: 500;
+    }
+    .item-completed {
+      color: #51cf66;
+    }
+    .refresh-section {
+      text-align: center;
+      margin-top: 30px;
+    }
+    .refresh-btn {
+      background: #222222;
+      border: 1px solid #444444;
+      color: #ffffff;
+      padding: 10px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    .refresh-btn:hover {
+      background: #333333;
+    }
+    .refresh-note {
+      color: #888888;
+      font-size: 12px;
+    }
+    .arrow {
+      transition: transform 0.2s;
+    }
+    .arrow.open {
+      transform: rotate(180deg);
+    }
+    .form-card {
+      background: #111111;
+      border: 2px solid #333333;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      color: #ffffff;
+      display: block;
+    }
+    .form-card:hover {
+      border-color: #ffffff;
+      background: #1a1a1a;
+    }
+    .form-card-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .form-card-desc {
+      font-size: 13px;
+      color: #888888;
+    }
+  </style>
+`;
 
 // Helper to format minutes into readable time
 function formatTime(minutes) {
@@ -301,8 +595,81 @@ async function getStatsWithCache() {
   }
 }
 
-// Main endpoint
-app.get('/', async (req, res) => {
+// Home page - Choose submit or check status
+app.get('/', (req, res) => {
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WCS Ticket System</title>
+  ${getStyles()}
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="/logo.png" alt="West Coast Strength" class="logo">
+      <h1>TICKET SYSTEM</h1>
+    </div>
+    
+    <div class="choice-grid">
+      <a href="/submit" class="choice-btn">
+        <div class="choice-icon">📝</div>
+        <div class="choice-title">SUBMIT A TICKET</div>
+        <div class="choice-desc">Create a new request</div>
+      </a>
+      <a href="/status" class="choice-btn">
+        <div class="choice-icon">📊</div>
+        <div class="choice-title">CHECK STATUS</div>
+        <div class="choice-desc">View ticket progress</div>
+      </a>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+  res.send(html);
+});
+
+// Submit ticket page - Choose form type
+app.get('/submit', (req, res) => {
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit a Ticket - WCS</title>
+  ${getStyles()}
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-link">← Back to Home</a>
+    
+    <div class="header">
+      <img src="/logo.png" alt="West Coast Strength" class="logo">
+      <h1>SUBMIT A TICKET</h1>
+    </div>
+    
+    <h2>What type of request?</h2>
+    
+    <div class="btn-grid">
+      ${LISTS.map(list => `
+        <a href="${list.formUrl}" target="_blank" class="form-card">
+          <div class="form-card-title">${list.name}</div>
+        </a>
+      `).join('')}
+    </div>
+  </div>
+</body>
+</html>
+  `;
+  res.send(html);
+});
+
+// Status page - The dashboard
+app.get('/status', async (req, res) => {
   try {
     const { results, fromCache, lastUpdated } = await getStatsWithCache();
     const lastUpdatedDate = new Date(lastUpdated);
@@ -314,7 +681,7 @@ app.get('/', async (req, res) => {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="refresh" content="3600">
-  <title>Average Ticket Time</title>
+  <title>Ticket Status - WCS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
@@ -492,13 +859,25 @@ app.get('/', async (req, res) => {
     .arrow.open {
       transform: rotate(180deg);
     }
+    .back-link {
+      display: inline-block;
+      color: #888888;
+      text-decoration: none;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    .back-link:hover {
+      color: #ffffff;
+    }
   </style>
 </head>
 <body>
   <div class="container">
+    <a href="/" class="back-link">← Back to Home</a>
+    
     <div class="header">
       <img src="/logo.png" alt="West Coast Strength" class="logo">
-      <h1>AVERAGE TICKET TIME</h1>
+      <h1>TICKET STATUS</h1>
     </div>
     ${results.map(r => `
       <div class="card">
@@ -593,11 +972,11 @@ app.get('/', async (req, res) => {
   }
 });
 
-// Force refresh endpoint - clears cache and redirects
+// Force refresh endpoint - clears cache and redirects to status
 app.get('/refresh', async (req, res) => {
   cachedResults = null;
   lastFetchTime = null;
-  res.redirect('/');
+  res.redirect('/status');
 });
 
 // JSON endpoint
