@@ -166,8 +166,8 @@ app.get('/', async (req, res) => {
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #1a1a2e;
-      color: #eee;
+      background: #000000;
+      color: #ffffff;
       padding: 20px;
       min-height: 100vh;
     }
@@ -178,15 +178,15 @@ app.get('/', async (req, res) => {
     h1 {
       text-align: center;
       margin-bottom: 30px;
-      color: #7b68ee;
+      color: #ffffff;
       font-size: 24px;
     }
     .card {
-      background: #16213e;
+      background: #111111;
       border-radius: 12px;
       padding: 24px;
       margin-bottom: 20px;
-      border: 1px solid #0f3460;
+      border: 1px solid #333333;
     }
     .card-header {
       display: flex;
@@ -197,7 +197,7 @@ app.get('/', async (req, res) => {
     .list-name {
       font-size: 18px;
       font-weight: 600;
-      color: #fff;
+      color: #ffffff;
     }
     .status-badge {
       background: #7b68ee;
@@ -219,24 +219,24 @@ app.get('/', async (req, res) => {
       justify-content: space-around;
       margin-top: 20px;
       padding-top: 20px;
-      border-top: 1px solid #0f3460;
+      border-top: 1px solid #333333;
     }
     .stat {
       text-align: center;
     }
     .stat-label {
       font-size: 12px;
-      color: #888;
+      color: #aaaaaa;
       margin-bottom: 4px;
     }
     .stat-value {
       font-size: 16px;
       font-weight: 600;
-      color: #fff;
+      color: #ffffff;
     }
     .refresh-note {
       text-align: center;
-      color: #666;
+      color: #888888;
       font-size: 12px;
       margin-top: 20px;
     }
@@ -268,7 +268,7 @@ app.get('/', async (req, res) => {
         </div>
       </div>
     `).join('')}
-    <p class="refresh-note">Last updated: ${new Date().toLocaleString()}</p>
+    <p class="refresh-note">Last updated: ${new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles', dateStyle: 'short', timeStyle: 'short' })} PST</p>
   </div>
 </body>
 </html>
